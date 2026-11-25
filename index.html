@@ -77,6 +77,9 @@
 .channel b{font-family:var(--display);font-size:1.25rem;display:block}
 .channel span{opacity:.8;font-size:.875rem}
 .channel em{font-style:normal;font-weight:700;border:1px solid currentColor;border-radius:10px;padding:8px 14px;white-space:nowrap}
+.channel.suggest{background:var(--accent);color:var(--accent-ink)}
+.channel .logo.mail{background:var(--mark);color:var(--mark-ink);font-size:1.5rem}
+.channel .logo.mail::after{display:none}
 .channel:hover em{background:var(--paper);color:var(--ink)}
 
 /* 花絮內頁 */
@@ -134,6 +137,14 @@ dialog.wide{width:min(920px,100%)}
       <div id="gal-more" class="showmore" hidden><button class="btn ghost" type="button" data-more>看更多花絮</button></div>
     </section>
 
+    <section id="sec-suggest" aria-label="意見箱" hidden>
+      <a class="channel suggest" id="suggest-link" href="#" target="_blank" rel="noopener">
+        <span class="logo mail" aria-hidden="true">✉</span>
+        <div><b>進駐團隊意見箱</b><span>空間設備、環境、活動課程，哪裡可以更好？匿名也能填，我們會在這裡回覆處理進度</span></div>
+        <em>我要提建議 →</em>
+      </a>
+    </section>
+
     <section aria-label="YouTube 頻道">
       <a class="channel" href="https://www.youtube.com/@hhsihub" target="_blank" rel="noopener">
         <span class="logo" aria-hidden="true"></span>
@@ -163,6 +174,7 @@ dialog.wide{width:min(920px,100%)}
   var QS = new URLSearchParams(location.search);
   var S = { acts: [], counts: {}, posts: [], base: /^(社創|青創)$/.test(QS.get("base") || "") ? QS.get("base") : "", galN: 9, lb: null };
   var SITE = window.ACTIVITY_URL || "https://hsh1120201-dev.github.io/activity/", HERE = new URL("./", location.href).href;
+  if (/^https:\/\//.test(window.SUGGEST_URL || "")) { $("suggest-link").href = window.SUGGEST_URL; $("sec-suggest").hidden = false; }
   document.querySelectorAll("[data-actlink]").forEach(function (a) { a.href = SITE; });
   var NOTE_TYPES = ["公告", "參訪", "課程"];
 

@@ -2,3 +2,5 @@
 window.API_URL = "https://script.google.com/macros/s/AKfycbyRp9pfZlfnr-UiOJizY5ASMGFyHFLM8pzPBOV4QfUZyQOuaZQ6S-k7HS-63Kvji0Xrlw/exec";
 // 活動報名網站（「我要報名」按鈕會連到這裡）
 window.ACTIVITY_URL = "https://hsh1120201-dev.github.io/activity/";
+// 進駐團隊意見箱（Google 表單填寫網址）；留空就不顯示
+window.SUGGEST_URL = "";
