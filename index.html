@@ -77,6 +77,8 @@
 .channel b{font-family:var(--display);font-size:1.25rem;display:block}
 .channel span{opacity:.8;font-size:.875rem}
 .channel em{font-style:normal;font-weight:700;border:1px solid currentColor;border-radius:10px;padding:8px 14px;white-space:nowrap}
+.channel.webfb{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.channel.webfb:hover em{background:var(--ink);color:var(--paper)}
 .channel.suggest{background:var(--accent);color:var(--accent-ink)}
 .channel .logo.mail{background:var(--mark);color:var(--mark-ink);font-size:1.5rem}
 .channel .logo.mail::after{display:none}
@@ -142,6 +144,14 @@ dialog.wide{width:min(920px,100%)}
         <span class="logo mail" aria-hidden="true">✉</span>
         <div><b>進駐團隊意見箱</b><span>空間設備、環境、活動課程，哪裡可以更好？匿名也能填，我們會在這裡回覆處理進度</span></div>
         <em>我要提建議 →</em>
+      </a>
+    </section>
+
+    <section aria-label="網站使用建議">
+      <a class="channel webfb" href="https://docs.google.com/forms/d/e/1FAIpQLScrMShGvC0ex5igQXjCpkhZ9pznWdEHXjDQ9VGPujIZ1LgDUw/viewform" target="_blank" rel="noopener">
+        <span class="logo mail" aria-hidden="true">💬</span>
+        <div><b>網站使用建議</b><span>公告欄、報名系統、電視牆哪裡不好用、想加什麼功能？花 2 分鐘告訴我們</span></div>
+        <em>填寫建議表 →</em>
       </a>
     </section>
 
