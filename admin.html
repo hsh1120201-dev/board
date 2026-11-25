@@ -77,11 +77,12 @@
   function actById(id) { for (var i = 0; i < S.acts.length; i++) if (S.acts[i].id === id) return S.acts[i]; return null; }
 
   /* ===== 兩基地進駐團隊公告欄（board.html）：公告、參訪、課程、成果花絮 ===== */
-  var POST_TYPES = ["成果花絮", "公告", "參訪", "課程"], POST_BASES = ["兩基地", "社創", "青創"];
+  var POST_TYPES = ["成果花絮", "團隊活動", "公告", "參訪", "課程"], POST_BASES = ["兩基地", "社創", "青創"];
   function boardLink(id) { return new URL("./", location.href).href + (id ? "#p-" + id : ""); }
   function postById(id) { return S.posts.filter(function (p) { return p.id === id; })[0] || null; }
   function boardTab() {
     var h = '<div class="row" style="margin-bottom:12px"><button class="btn" type="button" data-newpost="成果花絮">新增成果花絮</button>' +
+      '<button class="btn ghost" type="button" data-newpost="團隊活動">新增進駐團隊活動</button>' +
       '<button class="btn ghost" type="button" data-newpost="公告">新增公告／參訪／課程</button>' +
       '<a class="btn ghost" href="./" target="_blank" rel="noopener">開啟公告欄</a>' +
       '<button class="btn ghost" type="button" data-boardlink>複製公告欄連結</button>' +
@@ -109,16 +110,19 @@
     }).join("") : '<span class="note">還沒有照片</span>';
   }
   function openPost(id, type) {
-    var p = (id && postById(id)) || { type: type === "成果花絮" ? "成果花絮" : "公告", base: "兩基地", photos: [], youtube: [] };
+    var p = (id && postById(id)) || { type: POST_TYPES.indexOf(type) >= 0 ? type : "公告", base: "兩基地", photos: [], youtube: [] };
     S.pp = (p.photos || []).slice();
     var story = p.type === "成果花絮";
     var past = U.sortActs(S.acts).filter(function (a) { return a.status !== "open"; });
-    U.showDlg(U.head(id ? "編輯" + p.type : story ? "新增成果花絮" : "新增公告／參訪／課程") + '<form id="post-form" data-id="' + esc(id || "") + '">' +
+    U.showDlg(U.head(id ? "編輯" + p.type : story ? "新增成果花絮" : p.type === "團隊活動" ? "新增進駐團隊活動" : "新增公告／參訪／課程") + '<form id="post-form" data-id="' + esc(id || "") + '">' +
       (story && !id && past.length ? '<label class="f" for="p-from"><span>從活動帶入（選了會自動填標題、日期）</span><select id="p-from"><option value="">（不帶入，自己填）</option>' +
         past.map(function (a) { return '<option value="' + esc(a.id) + '">' + esc(U.dparts(a.date).md + "　" + a.title) + "</option>"; }).join("") + "</select></label>" : "") +
       '<div class="grid2"><label class="f" for="p-type"><span>類型</span><select id="p-type">' + POST_TYPES.map(function (t) { return "<option" + (p.type === t ? " selected" : "") + ">" + t + "</option>"; }).join("") + "</select></label>" +
       '<label class="f" for="p-base"><span>基地</span><select id="p-base">' + POST_BASES.map(function (t) { return "<option" + (p.base === t ? " selected" : "") + ">" + t + "</option>"; }).join("") + "</select></label></div>" +
       U.fld("p-title", "標題", p.title, true, "text", ' maxlength="100"') +
+      '<div id="p-teambox"' + (p.type === "團隊活動" ? "" : " hidden") + '>' + U.fld("p-team", "進駐團隊名稱", p.team, false, "text", ' maxlength="60"') +
+      '<div class="grid2">' + U.fld("p-time", "時間（例：14:00–16:00）", p.time, false, "text", ' maxlength="30"') + U.fld("p-loc", "地點", p.location, false, "text", ' maxlength="60"') + "</div>" +
+      '<p class="note">「團隊活動」日期還沒到的，會自動出現在大廳電視牆輪播。相關連結填報名網址，電視牆就會顯示報名 QR code；第一張照片會當成海報。</p></div>' +
       '<div class="grid2">' + U.fld("p-date", story ? "活動日期" : "日期（參訪、課程的日期；一般公告可不填）", p.date, false, "date") +
       '<label class="chk" style="align-self:end;min-height:46px"><input type="checkbox" id="p-pin"' + (p.pinned ? " checked" : "") + "> 置頂（排在最前面）</label></div>" +
       '<label class="f" for="p-body"><span>內容</span><textarea id="p-body" maxlength="3000" placeholder="' + (story ? "活動簡介、成果亮點、參加人數…" : "時間、地點、對象、注意事項…") + '">' + esc(p.body) + "</textarea></label>" +
@@ -209,7 +213,8 @@
       if (S.uploading) { U.toast("照片還在上傳，請稍等一下再儲存。"); return; }
       var lines = function (v) { return String(v || "").split(/[\r\n]+/).map(function (x) { return x.trim(); }).filter(function (x) { return /^https:\/\//.test(x); }); };
       var pst = { id: f.dataset.id, type: $("p-type").value, base: $("p-base").value, title: $("p-title").value.trim(), date: $("p-date").value,
-        body: $("p-body").value.trim(), photos: S.pp.concat(lines($("p-urls").value)), youtube: lines($("p-yt").value), link: $("p-link").value.trim(), pinned: $("p-pin").checked };
+        body: $("p-body").value.trim(), photos: S.pp.concat(lines($("p-urls").value)), youtube: lines($("p-yt").value), link: $("p-link").value.trim(), pinned: $("p-pin").checked,
+        team: $("p-team").value.trim(), time: $("p-time").value.trim(), location: $("p-loc").value.trim() };
       if (!pst.title) { U.toast("請填寫標題。"); return; }
       act(function () { return call("savePost", { post: pst }); }, "已儲存，公告欄馬上會更新。");
     }
@@ -233,6 +238,7 @@
   });
   document.addEventListener("change", function (e) {
     if (e.target.id === "p-file" && e.target.files.length) uploadPics(e.target.files, e.target);
+    else if (e.target.id === "p-type") $("p-teambox").hidden = e.target.value !== "團隊活動";
     else if (e.target.id === "p-from") {
       var fa = actById(e.target.value);
       if (fa) { $("p-title").value = fa.title + "｜活動花絮"; $("p-date").value = fa.date || ""; }

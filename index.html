@@ -32,7 +32,7 @@
 .notice .txt.all{-webkit-line-clamp:unset;display:block}
 .more{align-self:flex-start;background:none;border:0;padding:0;color:var(--accent);font-weight:700;cursor:pointer;font-size:.875rem}
 .k{font-size:.75rem;padding:2px 9px;border-radius:999px;font-weight:700;white-space:nowrap;border:1.5px solid var(--line);color:var(--muted)}
-.k.t-參訪{border-color:#7a5bd1;color:#7a5bd1}.k.t-課程{border-color:var(--fb);color:var(--fb)}.k.t-公告{border-color:var(--accent);color:var(--accent)}.k.t-成果花絮{border-color:#c0661c;color:#c0661c}
+.k.t-團隊活動{border-color:var(--open);color:var(--open)}.k.t-參訪{border-color:#7a5bd1;color:#7a5bd1}.k.t-課程{border-color:var(--fb);color:var(--fb)}.k.t-公告{border-color:var(--accent);color:var(--accent)}.k.t-成果花絮{border-color:#c0661c;color:#c0661c}
 .k.b-社創{background:#F39800;border-color:#F39800;color:#2b1a00}.k.b-青創{background:#2F7CC0;border-color:#2F7CC0;color:#fff}
 
 /* 近期活動 */
@@ -147,10 +147,10 @@ dialog.wide{width:min(920px,100%)}
       </a>
     </section>
 
-    <section aria-label="網站使用建議">
+    <section aria-label="系統使用意見調查">
       <a class="channel webfb" href="https://docs.google.com/forms/d/e/1FAIpQLScrMShGvC0ex5igQXjCpkhZ9pznWdEHXjDQ9VGPujIZ1LgDUw/viewform" target="_blank" rel="noopener">
         <span class="logo mail" aria-hidden="true">💬</span>
-        <div><b>網站使用建議</b><span>公告欄、報名系統、電視牆哪裡不好用、想加什麼功能？花 2 分鐘告訴我們</span></div>
+        <div><b>系統使用意見調查</b><span>公告欄、報名系統、電視牆哪裡不好用、想加什麼功能？花 2 分鐘告訴我們</span></div>
         <em>填寫建議表 →</em>
       </a>
     </section>
@@ -186,7 +186,7 @@ dialog.wide{width:min(920px,100%)}
   var SITE = window.ACTIVITY_URL || "https://hsh1120201-dev.github.io/activity/", HERE = new URL("./", location.href).href;
   if (/^https:\/\//.test(window.SUGGEST_URL || "")) { $("suggest-link").href = window.SUGGEST_URL; $("sec-suggest").hidden = false; }
   document.querySelectorAll("[data-actlink]").forEach(function (a) { a.href = SITE; });
-  var NOTE_TYPES = ["公告", "參訪", "課程"];
+  var NOTE_TYPES = ["團隊活動", "公告", "參訪", "課程"];
 
   function today() { var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
   function addDays(ymd, n) { var m = ymd.split("-"), d = new Date(+m[0], +m[1] - 1, +m[2] + n), p = function (x) { return (x < 10 ? "0" : "") + x; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
@@ -214,6 +214,7 @@ dialog.wide{width:min(920px,100%)}
       return '<article class="notice' + (p.pinned ? " pin" : "") + '"><div class="date"><b>' + esc(d.md) + "</b><i>" + esc(d.wd) + "</i></div>" +
         '<div class="body"><div class="tags"><span class="k t-' + esc(p.type) + '">' + esc(p.type) + "</span>" + baseTag(p.base) + (p.pinned ? '<span class="chip">置頂</span>' : "") + "</div>" +
         '<div class="t">' + esc(p.title) + "</div>" +
+        (p.team || p.time || p.location ? '<div class="cnt">' + esc([p.team, p.time, p.location].filter(Boolean).join("・")) + "</div>" : "") +
         (p.body ? '<p class="txt">' + esc(p.body) + "</p>" : "") +
         '<div class="row">' + (p.body && p.body.length > 90 ? '<button class="more" type="button" data-expand>看全文</button>' : "") +
         (p.link ? '<a class="btn sm" href="' + esc(p.link) + '" target="_blank" rel="noopener">' + (p.link.indexOf(SITE) === 0 ? "我要報名" : "查看詳情") + "</a>" : "") + "</div></div></article>";
