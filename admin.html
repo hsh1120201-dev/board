@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>公告欄管理｜兩基地進駐團隊公告欄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="logo-mark.svg">
+<link rel="stylesheet" href="style.css?v=20261125a">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">HSINCHU SOCIAL INNOVATION HUB × YOUTH STARTUP HUB</div>
+    <nav class="nav"><a href="./">回公告欄</a></nav>
+  </header>
+  <main>
+    <div class="hero">
+      <h1>公告欄<em>管理</em></h1>
+      <p>新增公告、參訪、課程消息和成果花絮。報名中的活動會自動出現在公告欄。</p>
+    </div>
+    <section id="body"></section>
+  </main>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-title"><div class="dlg" id="dlg-body"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = U.$, esc = U.esc;
+  /* 登入和活動報名後台共用同一組帳號（同一個 Google 試算表） */
+  var S = { token: "", acts: [], posts: [], pp: [], postsOk: false, loaded: false, busy: false };
+  try { S.token = sessionStorage.getItem("must-admin") || ""; S.email = sessionStorage.getItem("must-admin-email") || ""; } catch (e) {}
+  S.cfg = null;
+
+  /* ---------- Google 帳號登入 ---------- */
+  function loadLoginCfg() {
+    U.api("loginConfig").then(function (j) { S.cfg = { clientId: j.clientId || "", password: !!j.password }; })
+      .catch(function () { S.cfg = { clientId: "", password: true }; }) // 舊版後端：沿用密碼登入
+      .then(function () { if (!S.token) render(); });
+  }
+  function gsiReady(cb) {
+    if (window.google && google.accounts && google.accounts.id) return cb();
+    var old = document.getElementById("gsi-js");
+    if (old) { old.addEventListener("load", cb); return; }
+    var sc = document.createElement("script");
+    sc.id = "gsi-js"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true;
+    sc.onload = cb;
+    sc.onerror = function () { var m = $("gsi-msg"); if (m) m.textContent = "Google 登入元件載入失敗，請檢查網路後重新整理。"; };
+    document.head.appendChild(sc);
+  }
+  function showGoogleBtn() {
+    gsiReady(function () {
+      var box = $("gsi-btn");
+      if (!box) return;
+      google.accounts.id.initialize({ client_id: S.cfg.clientId, callback: onGoogleCredential, ux_mode: "popup", auto_select: false });
+      google.accounts.id.renderButton(box, { theme: "outline", size: "large", text: "signin_with", shape: "pill", locale: "zh-TW", width: 280 });
+    });
+  }
+  function onGoogleCredential(resp) {
+    if (S.busy) return; S.busy = true;
+    var m = $("gsi-msg"); if (m) m.textContent = "驗證中…";
+    U.api("googleLogin", { credential: resp.credential }).then(function (j) {
+      S.token = j.token; S.email = j.email || "";
+      try { sessionStorage.setItem("must-admin", S.token); sessionStorage.setItem("must-admin-email", S.email); } catch (x) {}
+      render(); return load();
+    }).catch(function (x) { if (m) m.textContent = ""; U.toast(x.message); }).then(function () { S.busy = false; });
+  }
+
+  function actById(id) { for (var i = 0; i < S.acts.length; i++) if (S.acts[i].id === id) return S.acts[i]; return null; }
+
+  /* ===== 兩基地進駐團隊公告欄（board.html）：公告、參訪、課程、成果花絮 ===== */
+  var POST_TYPES = ["成果花絮", "公告", "參訪", "課程"], POST_BASES = ["兩基地", "社創", "青創"];
+  function boardLink(id) { return new URL("./", location.href).href + (id ? "#p-" + id : ""); }
+  function postById(id) { return S.posts.filter(function (p) { return p.id === id; })[0] || null; }
+  function boardTab() {
+    var h = '<div class="row" style="margin-bottom:12px"><button class="btn" type="button" data-newpost="成果花絮">新增成果花絮</button>' +
+      '<button class="btn ghost" type="button" data-newpost="公告">新增公告／參訪／課程</button>' +
+      '<a class="btn ghost" href="./" target="_blank" rel="noopener">開啟公告欄</a>' +
+      '<button class="btn ghost" type="button" data-boardlink>複製公告欄連結</button>' +
+      (S.email ? '<span class="cnt" style="margin-left:auto" title="目前登入的帳號">' + esc(S.email) + "</span>" : "") +
+      '<button class="btn ghost sm" type="button" data-logout' + (S.email ? "" : ' style="margin-left:auto"') + '>登出</button></div>';
+    if (!S.postsOk) return h + '<div class="panel"><p><strong>試算表程式還沒更新。</strong></p><p class="note">把新版 Code.gs 貼到 Apps Script、重新部署後，這裡就能新增公告和花絮。在那之前，公告欄頁面會先只顯示報名中的活動。</p></div>';
+    h += '<p class="note" style="margin-bottom:12px">「報名中」的活動會自動出現在公告欄，不用另外新增。這裡放公告、參訪、課程消息和活動成果花絮（照片、YouTube 影片）。</p>';
+    var list = S.posts.slice().sort(function (a, b) { var x = a.date || a.createdAt || "", y = b.date || b.createdAt || ""; return x > y ? -1 : x < y ? 1 : 0; });
+    if (!list.length) return h + '<div class="panel"><p class="note">還沒有內容。按上面的按鈕新增第一則。</p></div>';
+    return h + '<div class="list">' + list.map(function (p) {
+      var c = (p.photos && p.photos[0]) ? U.photoUrl(p.photos[0], 200) : ((p.youtube || []).map(U.ytId).filter(Boolean)[0] ? "https://i.ytimg.com/vi/" + (p.youtube || []).map(U.ytId).filter(Boolean)[0] + "/default.jpg" : "");
+      return '<div class="arow">' + (c ? '<img class="athumb" src="' + esc(c) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<span class="athumb empty">' + esc(p.type) + "</span>") +
+        '<div class="info"><strong>' + esc(p.title) + "</strong>" +
+        '<span class="tags"><span class="chip">' + esc(p.type) + '</span><span class="cnt">' + esc(p.base) + (p.date ? " · " + esc(U.dparts(p.date).full) : "") +
+        ((p.photos || []).length ? " · 照片 " + p.photos.length + " 張" : "") + ((p.youtube || []).length ? " · 影片 " + p.youtube.length + " 支" : "") + (p.pinned ? " · 置頂" : "") + "</span></span></div>" +
+        '<div class="row"><button class="btn ghost sm" type="button" data-editpost="' + esc(p.id) + '">編輯</button>' +
+        (p.type === "成果花絮" ? '<button class="btn ghost sm" type="button" data-postlink="' + esc(p.id) + '">複製花絮連結</button>' : "") +
+        '<button class="btn danger sm" type="button" data-delpost="' + esc(p.id) + '">刪除</button></div></div>';
+    }).join("") + "</div>";
+  }
+  function picsHtml() {
+    return S.pp.length ? S.pp.map(function (u, i) {
+      return '<span style="position:relative;display:inline-block"><img src="' + esc(U.photoUrl(u, 200)) + '" alt="" referrerpolicy="no-referrer" style="width:96px;height:72px;object-fit:cover;border-radius:8px;display:block">' +
+        '<button type="button" class="x" data-rmpic="' + i + '" aria-label="移除這張" style="position:absolute;top:-8px;right:-8px;width:28px;height:28px;font-size:.8rem;background:var(--card)">✕</button></span>';
+    }).join("") : '<span class="note">還沒有照片</span>';
+  }
+  function openPost(id, type) {
+    var p = (id && postById(id)) || { type: type === "成果花絮" ? "成果花絮" : "公告", base: "兩基地", photos: [], youtube: [] };
+    S.pp = (p.photos || []).slice();
+    var story = p.type === "成果花絮";
+    var past = U.sortActs(S.acts).filter(function (a) { return a.status !== "open"; });
+    U.showDlg(U.head(id ? "編輯" + p.type : story ? "新增成果花絮" : "新增公告／參訪／課程") + '<form id="post-form" data-id="' + esc(id || "") + '">' +
+      (story && !id && past.length ? '<label class="f" for="p-from"><span>從活動帶入（選了會自動填標題、日期）</span><select id="p-from"><option value="">（不帶入，自己填）</option>' +
+        past.map(function (a) { return '<option value="' + esc(a.id) + '">' + esc(U.dparts(a.date).md + "　" + a.title) + "</option>"; }).join("") + "</select></label>" : "") +
+      '<div class="grid2"><label class="f" for="p-type"><span>類型</span><select id="p-type">' + POST_TYPES.map(function (t) { return "<option" + (p.type === t ? " selected" : "") + ">" + t + "</option>"; }).join("") + "</select></label>" +
+      '<label class="f" for="p-base"><span>基地</span><select id="p-base">' + POST_BASES.map(function (t) { return "<option" + (p.base === t ? " selected" : "") + ">" + t + "</option>"; }).join("") + "</select></label></div>" +
+      U.fld("p-title", "標題", p.title, true, "text", ' maxlength="100"') +
+      '<div class="grid2">' + U.fld("p-date", story ? "活動日期" : "日期（參訪、課程的日期；一般公告可不填）", p.date, false, "date") +
+      '<label class="chk" style="align-self:end;min-height:46px"><input type="checkbox" id="p-pin"' + (p.pinned ? " checked" : "") + "> 置頂（排在最前面）</label></div>" +
+      '<label class="f" for="p-body"><span>內容</span><textarea id="p-body" maxlength="3000" placeholder="' + (story ? "活動簡介、成果亮點、參加人數…" : "時間、地點、對象、注意事項…") + '">' + esc(p.body) + "</textarea></label>" +
+      '<div class="f"><span>照片（可一次選多張，會自動縮小上傳）</span><div class="imgpick"><div id="p-pics" class="row" style="gap:12px;padding:10px;border:1px dashed var(--line);border-radius:10px;background:var(--paper)">' + picsHtml() + "</div>" +
+      '<div class="row"><label class="btn ghost sm" for="p-file">選擇照片</label><input type="file" id="p-file" accept="image/jpeg,image/png,image/webp" multiple hidden><span id="p-imgmsg" class="cnt"></span></div>' +
+      '<textarea id="p-urls" style="min-height:46px" placeholder="或貼上照片網址／Google 雲端硬碟分享連結，一行一張（要設成「知道連結的人都能查看」）"></textarea></div></div>' +
+      '<label class="f" for="p-yt"><span>YouTube 影片網址（一行一支，例如 https://youtu.be/…）</span><textarea id="p-yt" style="min-height:46px">' + esc((p.youtube || []).join("\n")) + "</textarea></label>" +
+      U.fld("p-link", "相關連結（報名網址、新聞稿、FB 貼文…，可不填）", p.link, false, "text", ' inputmode="url" placeholder="https://"') +
+      '<div class="row"><button class="btn" type="submit">儲存</button><button class="btn ghost" type="button" data-close>取消</button></div></form>');
+  }
+  function uploadPics(files, input) {
+    var msg = $("p-imgmsg"), list = [].slice.call(files).filter(function (f) { return /^image\//.test(f.type); }), done = 0;
+    if (!list.length) { U.toast("請選擇圖片檔（JPG、PNG）。"); input.value = ""; return; }
+    if (S.uploading) return;
+    S.uploading = true;
+    var title = ($("p-title") && $("p-title").value.trim()) || "成果花絮";
+    var next = function () {
+      if (!list.length) return Promise.resolve();
+      var f = list.shift();
+      msg.textContent = "上傳中… " + (done + 1) + " / " + (done + list.length + 1);
+      return shrink(f).then(function (dataUrl) { return call("uploadImage", { type: "image/jpeg", name: title, data: dataUrl.split(",")[1] }); })
+        .then(function (j) { S.pp.push(j.url); done++; var box = $("p-pics"); if (box) box.innerHTML = picsHtml(); return next(); });
+    };
+    next().then(function () { msg.textContent = "已上傳 " + done + " 張，記得按「儲存」"; })
+      .catch(function (e) { msg.textContent = done ? "已上傳 " + done + " 張，其餘失敗" : ""; if (e.code !== "auth") U.toast(e.message); })
+      .then(function () { S.uploading = false; input.value = ""; });
+  }
+
+  function render() {
+    var el = $("body");
+    if (!U.configured()) { el.innerHTML = U.SETUP_NOTE; return; }
+    if (!S.token) {
+      if (!S.cfg) { el.innerHTML = '<div class="panel login"><p class="note">載入中…</p></div>'; return; }
+      if (S.cfg.clientId) {
+        el.innerHTML = '<div class="panel login"><h3 style="margin-top:0">後台登入</h3><div id="gsi-btn" style="min-height:44px"></div>' +
+          '<p class="note" id="gsi-msg" aria-live="polite"></p><p class="note">請用已加入「後台帳號」名單的 Google 帳號登入。</p></div>';
+        showGoogleBtn();
+        return;
+      }
+      el.innerHTML = '<form id="login-form" class="panel login">' + U.fld("pw", "後台密碼", "", true, "password", ' autocomplete="current-password"') +
+        '<button class="btn" type="submit">登入</button><p class="note">密碼放在 Google 試算表「設定」工作表的 B1 儲存格。</p></form>';
+      return;
+    }
+    if (!S.loaded) { el.innerHTML = '<div class="panel"><p class="note">載入中…</p></div>'; return; }
+    el.innerHTML = boardTab();
+  }
+
+  function logout(msg) {
+    S.token = ""; S.email = ""; S.loaded = false;
+    try { sessionStorage.removeItem("must-admin"); sessionStorage.removeItem("must-admin-email"); } catch (e) {}
+    try { if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); } catch (e) {}
+    render(); if (msg) U.toast(msg);
+  }
+  function call(action, data) {
+    return U.api(action, Object.assign({ token: S.token }, data || {})).catch(function (e) {
+      if (e.code === "auth") logout(e.message);
+      throw e;
+    });
+  }
+  function load() {
+    return call("boardAdmin").catch(function (e) {
+      if (/不支援/.test(e.message)) return { activities: [], posts: null }; // 試算表程式還沒更新
+      throw e;
+    }).then(function (j) {
+      S.acts = j.activities || []; S.postsOk = Array.isArray(j.posts); S.posts = j.posts || [];
+      S.loaded = true; render();
+    });
+  }
+  function act(fn, okMsg) {
+    if (S.busy) return;
+    S.busy = true;
+    fn().then(function () { U.toast(okMsg); U.closeDlg(); return load().then(function () { }); })
+      .catch(function (e) { if (e.code !== "auth") U.toast(e.message); })
+      .then(function () { S.busy = false; });
+  }
+
+  document.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = e.target;
+    if (f.id === "login-form") {
+      if (S.busy) return; S.busy = true;
+      U.api("login", { password: $("pw").value }).then(function (j) {
+        S.token = j.token;
+        try { sessionStorage.setItem("must-admin", S.token); } catch (x) {}
+        render(); return load();
+      }).catch(function (x) { U.toast(x.message); }).then(function () { S.busy = false; });
+    } else if (f.id === "post-form") {
+      if (S.uploading) { U.toast("照片還在上傳，請稍等一下再儲存。"); return; }
+      var lines = function (v) { return String(v || "").split(/[\r\n]+/).map(function (x) { return x.trim(); }).filter(function (x) { return /^https:\/\//.test(x); }); };
+      var pst = { id: f.dataset.id, type: $("p-type").value, base: $("p-base").value, title: $("p-title").value.trim(), date: $("p-date").value,
+        body: $("p-body").value.trim(), photos: S.pp.concat(lines($("p-urls").value)), youtube: lines($("p-yt").value), link: $("p-link").value.trim(), pinned: $("p-pin").checked };
+      if (!pst.title) { U.toast("請填寫標題。"); return; }
+      act(function () { return call("savePost", { post: pst }); }, "已儲存，公告欄馬上會更新。");
+    }
+  });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-close],[data-logout],[data-newpost],[data-editpost],[data-delpost],[data-rmpic],[data-postlink],[data-boardlink]");
+    if (!t) { if (e.target === $("dlg")) U.closeDlg(); return; }
+    var d = t.dataset;
+    if (d.close !== undefined) U.closeDlg();
+    else if (d.logout !== undefined) logout("已登出。");
+    else if (d.newpost !== undefined) openPost("", d.newpost);
+    else if (d.editpost !== undefined) openPost(d.editpost);
+    else if (d.delpost !== undefined) {
+      if (d.sure !== "1") { d.sure = "1"; t.textContent = "確定刪除？"; return; }
+      act(function () { return call("deletePost", { id: d.delpost }); }, "已刪除。");
+    } else if (d.rmpic !== undefined) { S.pp.splice(+d.rmpic, 1); $("p-pics").innerHTML = picsHtml(); }
+    else if (d.postlink !== undefined || d.boardlink !== undefined) {
+      var bl = boardLink(d.postlink || "");
+      navigator.clipboard.writeText(bl).then(function () { U.toast("連結已複製，可直接貼到 FB 或 LINE。"); }, function () { U.toast("連結是：" + bl); });
+    }
+  });
+  document.addEventListener("change", function (e) {
+    if (e.target.id === "p-file" && e.target.files.length) uploadPics(e.target.files, e.target);
+    else if (e.target.id === "p-from") {
+      var fa = actById(e.target.value);
+      if (fa) { $("p-title").value = fa.title + "｜活動花絮"; $("p-date").value = fa.date || ""; }
+    }
+  });
+
+  /* 上傳前先縮小到長邊 1600px 的 JPG，載入比較快，也不會超過大小限制 */
+  function shrink(file) {
+    return new Promise(function (ok, bad) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var max = 1600, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max / Math.max(w, h));
+        var c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        ok(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); bad(new Error("這個檔案無法當成圖片讀取，請換一張 JPG 或 PNG。")); };
+      img.src = url;
+    });
+  }
+  render();
+  if (U.configured()) loadLoginCfg();
+  if (S.token && U.configured()) load().catch(function (e) { if (e.code !== "auth") { $("body").innerHTML = '<div class="panel"><p class="note">' + esc(e.message) + "</p></div>"; } });
+})();
+</script>
+</body>
+</html>

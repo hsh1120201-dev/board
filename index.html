@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>兩基地進駐團隊公告欄｜新竹社創基地 × 新竹青創基地</title>
+<meta name="description" content="新竹社會創新基地與新竹青年創業基地的活動、參訪、課程消息與成果花絮。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="logo-mark.svg">
+<link rel="stylesheet" href="style.css?v=20261125a">
+<style>
+/* 公告欄：沿用報名平台的配色與字體，版面放寬成多欄 */
+.wrap{max-width:1080px}
+.nav a{white-space:nowrap}
+.bases{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.bases button{min-height:40px;padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:500}
+.bases button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sec-head a{font-size:.875rem;color:var(--accent);font-weight:700;text-decoration:none}
+.sec-head a:hover{text-decoration:underline}
+
+/* 公告 */
+.notes{display:grid;gap:10px}
+.notice{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.notice.pin{border-color:var(--mark);box-shadow:inset 4px 0 0 var(--mark)}
+.notice .date{flex-basis:74px}
+.notice .body{flex:1;min-width:0;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.notice .t{font-weight:700;font-size:1.0625rem;line-height:1.4;overflow-wrap:anywhere}
+.notice .txt{margin:0;color:var(--muted);font-size:.9062rem;white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.notice .txt.all{-webkit-line-clamp:unset;display:block}
+.more{align-self:flex-start;background:none;border:0;padding:0;color:var(--accent);font-weight:700;cursor:pointer;font-size:.875rem}
+.k{font-size:.75rem;padding:2px 9px;border-radius:999px;font-weight:700;white-space:nowrap;border:1.5px solid var(--line);color:var(--muted)}
+.k.t-參訪{border-color:#7a5bd1;color:#7a5bd1}.k.t-課程{border-color:var(--fb);color:var(--fb)}.k.t-公告{border-color:var(--accent);color:var(--accent)}.k.t-成果花絮{border-color:#c0661c;color:#c0661c}
+.k.b-社創{background:#F39800;border-color:#F39800;color:#2b1a00}.k.b-青創{background:#2F7CC0;border-color:#2F7CC0;color:#fff}
+
+/* 近期活動 */
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.ev{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.ev .cover{aspect-ratio:16/10;background:var(--paper);position:relative;overflow:hidden}
+.ev .cover img{width:100%;height:100%;object-fit:cover;display:block}
+.ev .cover .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink);color:var(--paper);font-family:var(--display)}
+.ev .cover .ph b{font-size:2.6rem;line-height:1}.ev .cover .ph i{font-style:normal;opacity:.8}
+.ev .cover .dd{position:absolute;left:10px;top:10px;background:var(--card);color:var(--ink);border-radius:10px;padding:4px 10px;font-weight:700;font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.ev .in{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.ev .t{font-weight:700;font-size:1.0625rem;line-height:1.4;overflow-wrap:anywhere}
+.ev .m{color:var(--muted);font-size:.8438rem}
+.ev .go{margin-top:auto;padding-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+.ev .go .btn{flex:1 1 auto}
+
+/* 成果花絮 */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.story{display:flex;flex-direction:column;text-align:left;padding:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;color:inherit}
+.story:hover{border-color:var(--accent)}
+.story:hover .cover img{transform:scale(1.04)}
+.story .cover{aspect-ratio:16/10;background:var(--paper);position:relative;overflow:hidden}
+.story .cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+.story .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--ink);color:var(--paper);font-family:var(--display)}
+.story .ph b{font-size:2.4rem}
+.story .badge{position:absolute;right:8px;bottom:8px;display:flex;gap:6px}
+.story .badge span{background:rgba(0,0,0,.66);color:#fff;border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:700}
+.story .badge .yt{background:#e62117}
+.story .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.story .play i{width:58px;height:40px;border-radius:12px;background:#e62117;display:flex;align-items:center;justify-content:center}
+.story .play i::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+.story .in{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px}
+.story .t{font-weight:700;font-size:1.0625rem;line-height:1.4}
+.story .m{color:var(--muted);font-size:.8438rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.showmore{display:flex;justify-content:center;margin-top:14px}
+
+/* YouTube 頻道 */
+.channel{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--ink);color:var(--paper);border-radius:var(--r);padding:18px 20px;text-decoration:none}
+.channel .logo{flex:none;width:58px;height:40px;border-radius:12px;background:#e62117;display:flex;align-items:center;justify-content:center}
+.channel .logo::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+.channel div{flex:1 1 220px}
+.channel b{font-family:var(--display);font-size:1.25rem;display:block}
+.channel span{opacity:.8;font-size:.875rem}
+.channel em{font-style:normal;font-weight:700;border:1px solid currentColor;border-radius:10px;padding:8px 14px;white-space:nowrap}
+.channel:hover em{background:var(--paper);color:var(--ink)}
+
+/* 花絮內頁 */
+dialog.wide{width:min(920px,100%)}
+.vids{display:grid;gap:12px}
+.vid{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.pics button{padding:0;border:0;border-radius:10px;overflow:hidden;aspect-ratio:4/3;cursor:zoom-in;background:var(--paper)}
+.pics img{width:100%;height:100%;object-fit:cover;display:block}
+.story-txt{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.share{display:flex;gap:8px;flex-wrap:wrap}
+
+/* 看大圖 */
+.lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center}
+.lb[hidden]{display:none}
+.lb img{max-width:94vw;max-height:84vh;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.lb button{position:absolute;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:50%;width:48px;height:48px;font-size:1.375rem;cursor:pointer}
+.lb button:hover{background:rgba(255,255,255,.28)}
+.lb .c{top:16px;right:16px}.lb .p{left:12px;top:50%;transform:translateY(-50%)}.lb .n{right:12px;top:50%;transform:translateY(-50%)}
+.lb .cnt{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#ddd}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">HSINCHU SOCIAL INNOVATION HUB × YOUTH STARTUP HUB</div>
+    <nav class="nav"><a href="https://hsh1120201-dev.github.io/activity/" data-actlink>活動報名</a></nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1 class="hero-title">兩基地<em>進駐團隊</em>公告欄</h1>
+      <p>新竹社會創新基地 × 新竹青年創業基地｜未來活動、參訪、課程消息，還有每次活動的成果花絮。</p>
+      <div class="bases" role="group" aria-label="篩選基地">
+        <button type="button" data-base="" aria-pressed="true">全部</button>
+        <button type="button" data-base="社創" aria-pressed="false">社創基地</button>
+        <button type="button" data-base="青創" aria-pressed="false">青創基地</button>
+      </div>
+    </div>
+
+    <section id="sec-notes" aria-labelledby="h-notes" hidden>
+      <div class="sec-head"><h2 id="h-notes">最新公告｜參訪・課程</h2></div>
+      <div id="notes" class="notes"></div>
+    </section>
+
+    <section aria-labelledby="h-acts">
+      <div class="sec-head"><h2 id="h-acts">近期活動・立即報名</h2><a href="https://hsh1120201-dev.github.io/activity/" data-actlink>看全部活動 →</a></div>
+      <div id="acts" class="acts"><div class="panel"><p class="note">載入中…</p></div></div>
+    </section>
+
+    <section aria-labelledby="h-gal">
+      <div class="sec-head"><h2 id="h-gal">成果花絮</h2><small>點進去看照片與影片</small></div>
+      <div id="gal" class="gal"><div class="panel"><p class="note">載入中…</p></div></div>
+      <div id="gal-more" class="showmore" hidden><button class="btn ghost" type="button" data-more>看更多花絮</button></div>
+    </section>
+
+    <section aria-label="YouTube 頻道">
+      <a class="channel" href="https://www.youtube.com/@hhsihub" target="_blank" rel="noopener">
+        <span class="logo" aria-hidden="true"></span>
+        <div><b>基地 YouTube 頻道</b><span>活動紀錄、團隊專訪與課程精華，訂閱 @hhsihub 不漏接</span></div>
+        <em>前往頻道 →</em>
+      </a>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg" class="wide" aria-labelledby="dlg-title"><div class="dlg" id="dlg-body"></div></dialog>
+<div id="lb" class="lb" hidden role="dialog" aria-label="照片">
+  <img id="lb-img" alt="">
+  <button class="c" type="button" data-lb="close" aria-label="關閉">✕</button>
+  <button class="p" type="button" data-lb="-1" aria-label="上一張">‹</button>
+  <button class="n" type="button" data-lb="1" aria-label="下一張">›</button>
+  <div class="cnt" id="lb-cnt"></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = U.$, esc = U.esc;
+  var QS = new URLSearchParams(location.search);
+  var S = { acts: [], counts: {}, posts: [], base: /^(社創|青創)$/.test(QS.get("base") || "") ? QS.get("base") : "", galN: 9, lb: null };
+  var SITE = window.ACTIVITY_URL || "https://hsh1120201-dev.github.io/activity/", HERE = new URL("./", location.href).href;
+  document.querySelectorAll("[data-actlink]").forEach(function (a) { a.href = SITE; });
+  var NOTE_TYPES = ["公告", "參訪", "課程"];
+
+  function today() { var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
+  function addDays(ymd, n) { var m = ymd.split("-"), d = new Date(+m[0], +m[1] - 1, +m[2] + n), p = function (x) { return (x < 10 ? "0" : "") + x; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
+  function byBase(p) { return !S.base || p.base === S.base || p.base === "兩基地"; }
+  function baseTag(b) { return b && b !== "兩基地" ? '<span class="k b-' + esc(b) + '">' + esc(b) + "基地</span>" : '<span class="k">兩基地</span>'; }
+  function cover(p) {
+    if (p.photos && p.photos.length) return U.photoUrl(p.photos[0], 800);
+    var y = (p.youtube || []).map(U.ytId).filter(Boolean)[0];
+    return y ? "https://i.ytimg.com/vi/" + y + "/hqdefault.jpg" : "";
+  }
+
+  /* 最新公告：置頂的、還沒到的、或最近 7 天內的 */
+  function renderNotes() {
+    var t = today(), old = addDays(t, -7);
+    var list = S.posts.filter(function (p) {
+      return NOTE_TYPES.indexOf(p.type) >= 0 && byBase(p) && (p.pinned || !p.date || p.date >= old);
+    }).sort(function (a, b) {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      var x = a.date || "9999", y = b.date || "9999";
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+    $("sec-notes").hidden = !list.length;
+    $("notes").innerHTML = list.map(function (p) {
+      var d = U.dparts(p.date);
+      return '<article class="notice' + (p.pinned ? " pin" : "") + '"><div class="date"><b>' + esc(d.md) + "</b><i>" + esc(d.wd) + "</i></div>" +
+        '<div class="body"><div class="tags"><span class="k t-' + esc(p.type) + '">' + esc(p.type) + "</span>" + baseTag(p.base) + (p.pinned ? '<span class="chip">置頂</span>' : "") + "</div>" +
+        '<div class="t">' + esc(p.title) + "</div>" +
+        (p.body ? '<p class="txt">' + esc(p.body) + "</p>" : "") +
+        '<div class="row">' + (p.body && p.body.length > 90 ? '<button class="more" type="button" data-expand>看全文</button>' : "") +
+        (p.link ? '<a class="btn sm" href="' + esc(p.link) + '" target="_blank" rel="noopener">' + (p.link.indexOf(SITE) === 0 ? "我要報名" : "查看詳情") + "</a>" : "") + "</div></div></article>";
+    }).join("");
+  }
+
+  /* 近期活動：報名系統裡「報名中」的活動，日期由近到遠 */
+  function renderActs() {
+    var t = today();
+    var list = S.acts.filter(function (a) { return a.status === "open" && (!a.date || a.date >= t); })
+      .sort(function (a, b) { var x = a.date || "9999", y = b.date || "9999"; return x < y ? -1 : x > y ? 1 : 0; });
+    if (!list.length) { $("acts").innerHTML = '<div class="panel" style="grid-column:1/-1"><p class="note">目前沒有開放報名的活動，新活動上架會第一時間公告在這裡。</p></div>'; return; }
+    $("acts").innerHTML = list.map(function (a) {
+      var d = U.dparts(a.date), full = a.capacity > 0 && (S.counts[a.id] || 0) >= a.capacity;
+      var link = SITE + "?id=" + encodeURIComponent(a.id);
+      return '<article class="ev"><div class="cover">' + (a.image ? '<img src="' + esc(a.image) + '" alt="" loading="lazy">' :
+          '<div class="ph"><b>' + esc(d.md) + "</b><i>" + esc(d.wd) + "</i></div>") +
+        (a.image ? '<span class="dd">' + esc(d.md) + " " + esc(d.wd) + "</span>" : "") + "</div>" +
+        '<div class="in"><div class="tags">' + (a.semester ? '<span class="chip">' + esc(a.semester) + "</span>" : "") + '<span class="cnt">' + esc(U.capText(a, S.counts)) + "</span></div>" +
+        '<div class="t">' + esc(a.title) + "</div>" +
+        '<div class="m">' + esc([d.full, a.time, a.location].filter(Boolean).join("・")) + "</div>" +
+        '<div class="go">' + (full ? '<span class="btn" aria-disabled="true" style="opacity:.55;cursor:default">已額滿</span>' : '<a class="btn" href="' + esc(link) + '&v=reg">我要報名</a>') +
+        '<a class="btn ghost" href="' + esc(link) + '">活動詳情</a></div></div></article>';
+    }).join("");
+  }
+
+  /* 成果花絮：新到舊 */
+  function stories() {
+    return S.posts.filter(function (p) { return p.type === "成果花絮" && byBase(p); }).sort(function (a, b) {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      var x = a.date || a.createdAt || "", y = b.date || b.createdAt || ""; return x > y ? -1 : x < y ? 1 : 0;
+    });
+  }
+  function renderGal() {
+    var all = stories(), list = all.slice(0, S.galN);
+    $("gal-more").hidden = all.length <= S.galN;
+    if (!list.length) { $("gal").innerHTML = '<div class="panel" style="grid-column:1/-1"><p class="note">成果花絮整理中，活動照片和影片很快就會放上來！</p></div>'; return; }
+    $("gal").innerHTML = list.map(function (p) {
+      var c = cover(p), nPic = (p.photos || []).length, nVid = (p.youtube || []).filter(U.ytId).length, d = U.dparts(p.date);
+      return '<button type="button" class="story" data-story="' + esc(p.id) + '"><div class="cover">' +
+        (c ? '<img src="' + esc(c) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<span class="ph"><b>' + esc(d.md || "花絮") + "</b></span>") +
+        (!nPic && nVid ? '<span class="play"><i></i></span>' : "") +
+        '<span class="badge">' + (nPic ? "<span>📷 " + nPic + " 張</span>" : "") + (nVid ? '<span class="yt">▶ 影片</span>' : "") + "</span></div>" +
+        '<div class="in"><div class="tags">' + baseTag(p.base) + (p.date ? '<span class="cnt">' + esc(d.full) + "</span>" : "") + "</div>" +
+        '<div class="t">' + esc(p.title) + "</div>" + (p.body ? '<div class="m">' + esc(p.body) + "</div>" : "") + "</div></button>";
+    }).join("");
+  }
+
+  function render() {
+    document.querySelectorAll("[data-base]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.base === S.base)); });
+    renderNotes(); renderActs(); renderGal();
+  }
+
+  function openStory(id) {
+    var p = S.posts.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    var vids = (p.youtube || []).map(U.ytId).filter(Boolean), pics = p.photos || [];
+    U.showDlg(U.head(p.title) +
+      '<div class="tags">' + baseTag(p.base) + (p.date ? '<span class="cnt">' + esc(U.dparts(p.date).full) + "</span>" : "") + "</div>" +
+      (p.body ? '<p class="story-txt">' + esc(p.body) + "</p>" : "") +
+      (vids.length ? '<div class="vids">' + vids.map(function (v) {
+        return '<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/' + v + '?rel=0" title="' + esc(p.title) + ' 影片" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
+      }).join("") + "</div>" : "") +
+      (pics.length ? '<div class="pics">' + pics.map(function (u, i) {
+        return '<button type="button" data-pic="' + i + '" aria-label="看大圖 第 ' + (i + 1) + ' 張"><img src="' + esc(U.photoUrl(u, 480)) + '" alt="" loading="lazy" referrerpolicy="no-referrer"></button>';
+      }).join("") + "</div>" : "") +
+      '<div class="share">' + (p.link ? '<a class="btn" href="' + esc(p.link) + '" target="_blank" rel="noopener">相關連結</a>' : "") +
+      '<button class="btn ghost" type="button" data-share="' + esc(p.id) + '">複製這篇花絮的連結</button></div>');
+    S.cur = p;
+    if (location.hash !== "#p-" + p.id) history.replaceState(null, "", "#p-" + p.id);
+  }
+  function showPic(i) {
+    var pics = (S.cur && S.cur.photos) || [];
+    if (!pics.length) return;
+    S.lb = (i + pics.length) % pics.length;
+    $("lb-img").src = U.photoUrl(pics[S.lb], 1600);
+    $("lb-cnt").textContent = (S.lb + 1) + " / " + pics.length;
+    $("lb").hidden = false;
+  }
+  function closePic() { $("lb").hidden = true; $("lb-img").removeAttribute("src"); S.lb = null; }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-base],[data-story],[data-close],[data-pic],[data-lb],[data-more],[data-expand],[data-share]");
+    if (!t) { if (e.target === $("dlg")) U.closeDlg(); else if (e.target === $("lb")) closePic(); return; }
+    var d = t.dataset;
+    if (d.base !== undefined) { S.base = d.base; render(); }
+    else if (d.story !== undefined) openStory(d.story);
+    else if (d.close !== undefined) U.closeDlg();
+    else if (d.pic !== undefined) showPic(+d.pic);
+    else if (d.lb !== undefined) { if (d.lb === "close") closePic(); else showPic(S.lb + +d.lb); }
+    else if (d.more !== undefined) { S.galN += 9; renderGal(); }
+    else if (d.expand !== undefined) { var x = t.closest(".body").querySelector(".txt"); x.classList.toggle("all"); t.textContent = x.classList.contains("all") ? "收起" : "看全文"; }
+    else if (d.share !== undefined) {
+      var url = HERE + "#p-" + d.share;
+      navigator.clipboard.writeText(url).then(function () { U.toast("連結已複製，可以貼到 LINE 或 FB。"); }, function () { U.toast("連結是：" + url); });
+    }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (S.lb == null) return;
+    if (e.key === "Escape") { e.preventDefault(); closePic(); }
+    else if (e.key === "ArrowLeft") showPic(S.lb - 1);
+    else if (e.key === "ArrowRight") showPic(S.lb + 1);
+  }, true);
+  $("dlg").addEventListener("close", function () { closePic(); S.cur = null; if (/^#p-/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search); });
+
+  function load() {
+    if (!U.configured()) { $("acts").innerHTML = U.SETUP_NOTE; $("gal").innerHTML = ""; return; }
+    U.api("board").catch(function (e) {
+      if (/不支援/.test(e.message)) return U.api("list"); // 後端還沒更新：先只顯示活動
+      throw e;
+    }).then(function (j) {
+      S.acts = j.activities || []; S.counts = j.counts || {}; S.posts = j.posts || [];
+      render();
+      var m = /^#p-([A-Za-z0-9]+)$/.exec(location.hash);
+      if (m) openStory(m[1]);
+    }).catch(function (e) {
+      $("acts").innerHTML = '<div class="panel" style="grid-column:1/-1"><p class="note">' + esc(e.message) + "</p></div>"; $("gal").innerHTML = "";
+    });
+  }
+  load();
+})();
+</script>
+</body>
+</html>
