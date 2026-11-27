@@ -124,8 +124,14 @@ dialog.wide{width:min(920px,100%)}
       </div>
     </div>
 
+    <section aria-labelledby="h-ann">
+      <div class="sec-head"><h2 id="h-ann">公告區</h2><small>基地最新公告</small></div>
+      <div id="ann" class="notes"><div class="panel"><p class="note">載入中…</p></div></div>
+      <div id="ann-more" class="showmore" hidden><button class="btn ghost" type="button" data-annmore>看更多公告</button></div>
+    </section>
+
     <section id="sec-notes" aria-labelledby="h-notes" hidden>
-      <div class="sec-head"><h2 id="h-notes">最新公告｜參訪・課程</h2></div>
+      <div class="sec-head"><h2 id="h-notes">參訪・課程・團隊活動</h2></div>
       <div id="notes" class="notes"></div>
     </section>
 
@@ -183,11 +189,11 @@ dialog.wide{width:min(920px,100%)}
   "use strict";
   var $ = U.$, esc = U.esc;
   var QS = new URLSearchParams(location.search);
-  var S = { acts: [], counts: {}, posts: [], base: /^(社創|青創)$/.test(QS.get("base") || "") ? QS.get("base") : "", galN: 9, lb: null };
+  var S = { acts: [], counts: {}, posts: [], base: /^(社創|青創)$/.test(QS.get("base") || "") ? QS.get("base") : "", galN: 9, annN: 5, lb: null };
   var SITE = window.ACTIVITY_URL || "https://hsh1120201-dev.github.io/activity/", HERE = new URL("./", location.href).href;
   if (/^https:\/\//.test(window.SUGGEST_URL || "")) { $("suggest-link").href = window.SUGGEST_URL; $("sec-suggest").hidden = false; }
   document.querySelectorAll("[data-actlink]").forEach(function (a) { a.href = SITE; });
-  var NOTE_TYPES = ["團隊活動", "公告", "參訪", "課程"];
+  var NOTE_TYPES = ["團隊活動", "參訪", "課程"]; // 「公告」另外放在公告區
 
   function today() { var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
   function addDays(ymd, n) { var m = ymd.split("-"), d = new Date(+m[0], +m[1] - 1, +m[2] + n), p = function (x) { return (x < 10 ? "0" : "") + x; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
@@ -210,8 +216,21 @@ dialog.wide{width:min(920px,100%)}
       return x < y ? -1 : x > y ? 1 : 0;
     });
     $("sec-notes").hidden = !list.length;
-    $("notes").innerHTML = list.map(function (p) {
-      var d = U.dparts(p.date);
+    $("notes").innerHTML = list.map(noteCard).join("");
+  }
+  /* 公告區：類型「公告」，置頂在前，其餘新到舊；先顯示 5 則 */
+  function renderAnn() {
+    var all = S.posts.filter(function (p) { return p.type === "公告" && byBase(p); }).sort(function (a, b) {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      var x = a.date || a.createdAt || "", y = b.date || b.createdAt || ""; return x > y ? -1 : x < y ? 1 : 0;
+    });
+    $("ann-more").hidden = all.length <= S.annN;
+    $("ann").innerHTML = all.length ? all.slice(0, S.annN).map(noteCard).join("") : '<div class="panel"><p class="note">目前沒有新公告。</p></div>';
+  }
+  function noteCard(p) {
+      var pd = p.date;
+      if (!pd && p.type === "公告" && p.createdAt) { var c = new Date(p.createdAt); if (!isNaN(c)) pd = c.getFullYear() + "-" + ("0" + (c.getMonth() + 1)).slice(-2) + "-" + ("0" + c.getDate()).slice(-2); } // 公告沒填日期就用張貼日
+      var d = U.dparts(pd);
       return '<article class="notice' + (p.pinned ? " pin" : "") + '"><div class="date"><b>' + esc(d.md) + "</b><i>" + esc(d.wd) + "</i></div>" +
         '<div class="body"><div class="tags"><span class="k t-' + esc(p.type) + '">' + esc(p.type) + "</span>" + baseTag(p.base) + (p.pinned ? '<span class="chip">置頂</span>' : "") + "</div>" +
         '<div class="t">' + esc(p.title) + "</div>" +
@@ -219,7 +238,6 @@ dialog.wide{width:min(920px,100%)}
         (p.body ? '<p class="txt">' + esc(p.body) + "</p>" : "") +
         '<div class="row">' + (p.body && p.body.length > 90 ? '<button class="more" type="button" data-expand>看全文</button>' : "") +
         (p.link ? '<a class="btn sm" href="' + esc(p.link) + '" target="_blank" rel="noopener">' + (p.link.indexOf(SITE) === 0 ? "我要報名" : "查看詳情") + "</a>" : "") + "</div></div></article>";
-    }).join("");
   }
 
   /* 近期活動：報名系統裡「報名中」的活動，日期由近到遠 */
@@ -266,7 +284,7 @@ dialog.wide{width:min(920px,100%)}
 
   function render() {
     document.querySelectorAll("[data-base]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.base === S.base)); });
-    renderNotes(); renderActs(); renderGal();
+    renderAnn(); renderNotes(); renderActs(); renderGal();
   }
 
   function openStory(id) {
@@ -298,7 +316,7 @@ dialog.wide{width:min(920px,100%)}
   function closePic() { var lb = $("lb"); if (lb.open) { try { lb.close(); } catch (e) { lb.removeAttribute("open"); } } $("lb-img").removeAttribute("src"); S.lb = null; }
 
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-base],[data-story],[data-close],[data-pic],[data-lb],[data-more],[data-expand],[data-share]");
+    var t = e.target.closest("[data-base],[data-story],[data-close],[data-pic],[data-lb],[data-more],[data-annmore],[data-expand],[data-share]");
     if (!t) { if (e.target === $("dlg")) U.closeDlg(); else if (e.target === $("lb")) closePic(); return; }
     var d = t.dataset;
     if (d.base !== undefined) { S.base = d.base; render(); }
@@ -307,6 +325,7 @@ dialog.wide{width:min(920px,100%)}
     else if (d.pic !== undefined) showPic(+d.pic);
     else if (d.lb !== undefined) { if (d.lb === "close") closePic(); else showPic(S.lb + +d.lb); }
     else if (d.more !== undefined) { S.galN += 9; renderGal(); }
+    else if (d.annmore !== undefined) { S.annN += 10; renderAnn(); }
     else if (d.expand !== undefined) { var x = t.closest(".body").querySelector(".txt"); x.classList.toggle("all"); t.textContent = x.classList.contains("all") ? "收起" : "看全文"; }
     else if (d.share !== undefined) {
       var url = HERE + "#p-" + d.share;
