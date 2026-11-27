@@ -218,19 +218,25 @@ dialog.wide{width:min(920px,100%)}
     $("sec-notes").hidden = !list.length;
     $("notes").innerHTML = list.map(noteCard).join("");
   }
-  /* 公告區：類型「公告」，置頂在前，其餘新到舊；先顯示 5 則 */
+  /* 公告區：類型「公告」，置頂在前，其餘照日期排；先顯示 5 則 */
+  function annDate(p) { // 公告沒填日期就用張貼日
+    if (p.date) return p.date;
+    var c = new Date(p.createdAt || "");
+    return isNaN(c) ? "" : c.getFullYear() + "-" + ("0" + (c.getMonth() + 1)).slice(-2) + "-" + ("0" + c.getDate()).slice(-2);
+  }
   function renderAnn() {
+    var t = today();
     var all = S.posts.filter(function (p) { return p.type === "公告" && byBase(p); }).sort(function (a, b) {
       if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-      var x = a.date || a.createdAt || "", y = b.date || b.createdAt || ""; return x > y ? -1 : x < y ? 1 : 0;
+      var x = annDate(a), y = annDate(b), fx = x >= t, fy = y >= t;
+      if (fx !== fy) return fx ? -1 : 1;             // 今天以後的排前面
+      return x === y ? 0 : fx ? (x < y ? -1 : 1) : (x > y ? -1 : 1); // 還沒到的：日期近的在上；過去的：新的在上
     });
     $("ann-more").hidden = all.length <= S.annN;
     $("ann").innerHTML = all.length ? all.slice(0, S.annN).map(noteCard).join("") : '<div class="panel"><p class="note">目前沒有新公告。</p></div>';
   }
   function noteCard(p) {
-      var pd = p.date;
-      if (!pd && p.type === "公告" && p.createdAt) { var c = new Date(p.createdAt); if (!isNaN(c)) pd = c.getFullYear() + "-" + ("0" + (c.getMonth() + 1)).slice(-2) + "-" + ("0" + c.getDate()).slice(-2); } // 公告沒填日期就用張貼日
-      var d = U.dparts(pd);
+      var d = U.dparts(p.type === "公告" ? annDate(p) : p.date);
       return '<article class="notice' + (p.pinned ? " pin" : "") + '"><div class="date"><b>' + esc(d.md) + "</b><i>" + esc(d.wd) + "</i></div>" +
         '<div class="body"><div class="tags"><span class="k t-' + esc(p.type) + '">' + esc(p.type) + "</span>" + baseTag(p.base) + (p.pinned ? '<span class="chip">置頂</span>' : "") + "</div>" +
         '<div class="t">' + esc(p.title) + "</div>" +
