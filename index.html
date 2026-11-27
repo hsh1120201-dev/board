@@ -96,8 +96,9 @@ dialog.wide{width:min(920px,100%)}
 .share{display:flex;gap:8px;flex-wrap:wrap}
 
 /* 看大圖 */
-.lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center}
-.lb[hidden]{display:none}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0}
+.lb:not([open]){display:none}
+.lb::backdrop{background:transparent}
 .lb img{max-width:94vw;max-height:84vh;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .lb button{position:absolute;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:50%;width:48px;height:48px;font-size:1.375rem;cursor:pointer}
 .lb button:hover{background:rgba(255,255,255,.28)}
@@ -166,13 +167,13 @@ dialog.wide{width:min(920px,100%)}
 </div>
 
 <dialog id="dlg" class="wide" aria-labelledby="dlg-title"><div class="dlg" id="dlg-body"></div></dialog>
-<div id="lb" class="lb" hidden role="dialog" aria-label="照片">
+<dialog id="lb" class="lb" aria-label="照片">
   <img id="lb-img" alt="">
   <button class="c" type="button" data-lb="close" aria-label="關閉">✕</button>
   <button class="p" type="button" data-lb="-1" aria-label="上一張">‹</button>
   <button class="n" type="button" data-lb="1" aria-label="下一張">›</button>
   <div class="cnt" id="lb-cnt"></div>
-</div>
+</dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="config.js?v=20261125b"></script>
@@ -292,9 +293,9 @@ dialog.wide{width:min(920px,100%)}
     S.lb = (i + pics.length) % pics.length;
     $("lb-img").src = U.photoUrl(pics[S.lb], 1600);
     $("lb-cnt").textContent = (S.lb + 1) + " / " + pics.length;
-    $("lb").hidden = false;
+    var lb = $("lb"); if (!lb.open) { try { lb.showModal(); } catch (e) { lb.setAttribute("open", ""); } } // 開在花絮視窗上面
   }
-  function closePic() { $("lb").hidden = true; $("lb-img").removeAttribute("src"); S.lb = null; }
+  function closePic() { var lb = $("lb"); if (lb.open) { try { lb.close(); } catch (e) { lb.removeAttribute("open"); } } $("lb-img").removeAttribute("src"); S.lb = null; }
 
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-base],[data-story],[data-close],[data-pic],[data-lb],[data-more],[data-expand],[data-share]");
