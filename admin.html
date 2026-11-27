@@ -131,6 +131,7 @@
       '<div class="row"><label class="btn ghost sm" for="p-file">選擇照片</label><input type="file" id="p-file" accept="image/jpeg,image/png,image/webp" multiple hidden><span id="p-imgmsg" class="cnt"></span></div>' +
       '<textarea id="p-urls" style="min-height:46px" placeholder="或貼上照片網址／Google 雲端硬碟分享連結，一行一張（要設成「知道連結的人都能查看」）"></textarea></div></div>' +
       '<label class="f" for="p-yt"><span>YouTube 影片網址（一行一支，例如 https://youtu.be/…）</span><textarea id="p-yt" style="min-height:46px">' + esc((p.youtube || []).join("\n")) + "</textarea></label>" +
+      '<div id="p-albumbox"' + (story ? "" : " hidden") + '>' + U.fld("p-album", "活動照片連結（雲端硬碟相簿資料夾網址，花絮視窗會出現「活動照片」按鈕；可不填）", p.album, false, "text", ' inputmode="url" placeholder="https://drive.google.com/…"') + "</div>" +
       U.fld("p-link", "相關連結（報名網址、新聞稿、FB 貼文…，可不填）", p.link, false, "text", ' inputmode="url" placeholder="https://"') +
       '<div class="row"><button class="btn" type="submit">儲存</button><button class="btn ghost" type="button" data-close>取消</button></div></form>');
   }
@@ -213,7 +214,7 @@
     } else if (f.id === "post-form") {
       if (S.uploading) { U.toast("照片還在上傳，請稍等一下再儲存。"); return; }
       var lines = function (v) { return String(v || "").split(/[\r\n]+/).map(function (x) { return x.trim(); }).filter(function (x) { return /^https:\/\//.test(x); }); };
-      var pst = { id: f.dataset.id, type: $("p-type").value, base: $("p-base").value, title: $("p-title").value.trim(), date: $("p-date").value, endDate: $("p-type").value === "成果花絮" ? $("p-end").value : "",
+      var pst = { id: f.dataset.id, type: $("p-type").value, base: $("p-base").value, title: $("p-title").value.trim(), date: $("p-date").value, endDate: $("p-type").value === "成果花絮" ? $("p-end").value : "", album: $("p-type").value === "成果花絮" ? $("p-album").value.trim() : "",
         body: $("p-body").value.trim(), photos: S.pp.concat(lines($("p-urls").value)), youtube: lines($("p-yt").value), link: $("p-link").value.trim(), pinned: $("p-pin").checked,
         team: $("p-team").value.trim(), time: $("p-time").value.trim(), location: $("p-loc").value.trim() };
       if (!pst.title) { U.toast("請填寫標題。"); return; }
@@ -241,7 +242,7 @@
   });
   document.addEventListener("change", function (e) {
     if (e.target.id === "p-file" && e.target.files.length) uploadPics(e.target.files, e.target);
-    else if (e.target.id === "p-type") { $("p-teambox").hidden = e.target.value !== "團隊活動"; $("p-endbox").hidden = e.target.value !== "成果花絮"; }
+    else if (e.target.id === "p-type") { $("p-teambox").hidden = e.target.value !== "團隊活動"; $("p-endbox").hidden = $("p-albumbox").hidden = e.target.value !== "成果花絮"; }
     else if (e.target.id === "p-from") {
       var fa = actById(e.target.value);
       if (fa) { $("p-title").value = fa.title + "｜活動花絮"; $("p-date").value = fa.date || ""; }

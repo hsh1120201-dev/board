@@ -4,5 +4,3 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbyRp9pfZlfnr-UiOJizY5A
 window.ACTIVITY_URL = "https://hsh1120201-dev.github.io/activity/";
 // 進駐團隊意見箱（Google 表單填寫網址）；留空就不顯示
 window.SUGGEST_URL = "https://docs.google.com/forms/d/e/1FAIpQLScaXr4F0QR0A-KGe8OSkfuj42kgWBfYEam1XUkiTRqIBmj4uQ/viewform";
-// 「活動照片」按鈕：填 Google 雲端硬碟相簿資料夾網址就連過去；留空則跳到本頁「成果花絮」
-window.PHOTOS_URL = "";
