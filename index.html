@@ -254,12 +254,12 @@ dialog.wide{width:min(920px,100%)}
     $("gal-more").hidden = all.length <= S.galN;
     if (!list.length) { $("gal").innerHTML = '<div class="panel" style="grid-column:1/-1"><p class="note">成果花絮整理中，活動照片和影片很快就會放上來！</p></div>'; return; }
     $("gal").innerHTML = list.map(function (p) {
-      var c = cover(p), nPic = (p.photos || []).length, nVid = (p.youtube || []).filter(U.ytId).length, d = U.dparts(p.date);
+      var c = cover(p), nPic = (p.photos || []).length, nVid = (p.youtube || []).filter(U.ytId).length, d = U.dparts(p.date), dr = U.drange(p.date, p.endDate);
       return '<button type="button" class="story" data-story="' + esc(p.id) + '"><div class="cover">' +
         (c ? '<img src="' + esc(c) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<span class="ph"><b>' + esc(d.md || "花絮") + "</b></span>") +
         (!nPic && nVid ? '<span class="play"><i></i></span>' : "") +
         '<span class="badge">' + (nPic ? "<span>📷 " + nPic + " 張</span>" : "") + (nVid ? '<span class="yt">▶ 影片</span>' : "") + "</span></div>" +
-        '<div class="in"><div class="tags">' + baseTag(p.base) + (p.date ? '<span class="cnt">' + esc(d.full) + "</span>" : "") + "</div>" +
+        '<div class="in"><div class="tags">' + baseTag(p.base) + (p.date ? '<span class="cnt">' + esc(dr) + "</span>" : "") + "</div>" +
         '<div class="t">' + esc(p.title) + "</div>" + (p.body ? '<div class="m">' + esc(p.body) + "</div>" : "") + "</div></button>";
     }).join("");
   }
@@ -274,7 +274,7 @@ dialog.wide{width:min(920px,100%)}
     if (!p) return;
     var vids = (p.youtube || []).map(U.ytId).filter(Boolean), pics = p.photos || [];
     U.showDlg(U.head(p.title) +
-      '<div class="tags">' + baseTag(p.base) + (p.date ? '<span class="cnt">' + esc(U.dparts(p.date).full) + "</span>" : "") + "</div>" +
+      '<div class="tags">' + baseTag(p.base) + (p.date ? '<span class="cnt">' + esc(U.drange(p.date, p.endDate)) + "</span>" : "") + "</div>" +
       (p.body ? '<p class="story-txt">' + esc(p.body) + "</p>" : "") +
       (vids.length ? '<div class="vids">' + vids.map(function (v) {
         return '<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/' + v + '?rel=0" title="' + esc(p.title) + ' 影片" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
