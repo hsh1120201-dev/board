@@ -17,6 +17,13 @@
     var dt = new Date(+m[1], +m[2] - 1, +m[3]);
     return { md: +m[2] + "/" + +m[3], wd: "週" + WD[dt.getDay()], full: m[1] + "/" + m[2] + "/" + m[3] + "（" + WD[dt.getDay()] + "）" };
   };
+  /* 活動期間：2026/11/20（五）～11/22（日）；沒有迄日就是單日 */
+  U.drange = function (a, b) {
+    var x = U.dparts(a);
+    if (!b || !a || b <= a) return x.full;
+    var y = U.dparts(b);
+    return x.full + "～" + (a.slice(0, 4) === b.slice(0, 4) ? y.full.slice(5) : y.full);
+  };
   U.ftime = function (iso) {
     if (!iso) return "";
     var d = new Date(iso);

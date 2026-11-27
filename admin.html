@@ -96,7 +96,7 @@
       var c = (p.photos && p.photos[0]) ? U.photoUrl(p.photos[0], 200) : ((p.youtube || []).map(U.ytId).filter(Boolean)[0] ? "https://i.ytimg.com/vi/" + (p.youtube || []).map(U.ytId).filter(Boolean)[0] + "/default.jpg" : "");
       return '<div class="arow">' + (c ? '<img class="athumb" src="' + esc(c) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<span class="athumb empty">' + esc(p.type) + "</span>") +
         '<div class="info"><strong>' + esc(p.title) + "</strong>" +
-        '<span class="tags"><span class="chip">' + esc(p.type) + '</span><span class="cnt">' + esc(p.base) + (p.date ? " · " + esc(U.dparts(p.date).full) : "") +
+        '<span class="tags"><span class="chip">' + esc(p.type) + '</span><span class="cnt">' + esc(p.base) + (p.date ? " · " + esc(U.drange(p.date, p.endDate)) : "") +
         ((p.photos || []).length ? " · 照片 " + p.photos.length + " 張" : "") + ((p.youtube || []).length ? " · 影片 " + p.youtube.length + " 支" : "") + (p.pinned ? " · 置頂" : "") + "</span></span></div>" +
         '<div class="row"><button class="btn ghost sm" type="button" data-editpost="' + esc(p.id) + '">編輯</button>' +
         (p.type === "成果花絮" ? '<button class="btn ghost sm" type="button" data-postlink="' + esc(p.id) + '">複製花絮連結</button>' : "") +
@@ -123,8 +123,9 @@
       '<div id="p-teambox"' + (p.type === "團隊活動" ? "" : " hidden") + '>' + U.fld("p-team", "進駐團隊名稱", p.team, false, "text", ' maxlength="60"') +
       '<div class="grid2">' + U.fld("p-time", "時間（例：14:00–16:00）", p.time, false, "text", ' maxlength="30"') + U.fld("p-loc", "地點", p.location, false, "text", ' maxlength="60"') + "</div>" +
       '<p class="note">「團隊活動」日期還沒到的，會自動出現在大廳電視牆輪播。相關連結填報名網址，電視牆就會顯示報名 QR code；第一張照片會當成海報。</p></div>' +
-      '<div class="grid2">' + U.fld("p-date", story ? "活動日期" : "日期（參訪、課程的日期；一般公告可不填）", p.date, false, "date") +
-      '<label class="chk" style="align-self:end;min-height:46px"><input type="checkbox" id="p-pin"' + (p.pinned ? " checked" : "") + "> 置頂（排在最前面）</label></div>" +
+      '<div class="grid2">' + U.fld("p-date", story ? "活動期間：起日" : "日期（參訪、課程的日期；一般公告可不填）", p.date, false, "date") +
+      '<div id="p-endbox"' + (story ? "" : " hidden") + '>' + U.fld("p-end", "活動期間：迄日（一天的活動可不填）", p.endDate, false, "date") + "</div></div>" +
+      '<label class="chk" style="margin-bottom:12px"><input type="checkbox" id="p-pin"' + (p.pinned ? " checked" : "") + "> 置頂（排在最前面）</label>" +
       '<label class="f" for="p-body"><span>內容</span><textarea id="p-body" maxlength="3000" placeholder="' + (story ? "活動簡介、成果亮點、參加人數…" : "時間、地點、對象、注意事項…") + '">' + esc(p.body) + "</textarea></label>" +
       '<div class="f"><span>照片（可一次選多張，會自動縮小上傳）</span><div class="imgpick"><div id="p-pics" class="row" style="gap:12px;padding:10px;border:1px dashed var(--line);border-radius:10px;background:var(--paper)">' + picsHtml() + "</div>" +
       '<div class="row"><label class="btn ghost sm" for="p-file">選擇照片</label><input type="file" id="p-file" accept="image/jpeg,image/png,image/webp" multiple hidden><span id="p-imgmsg" class="cnt"></span></div>' +
@@ -212,10 +213,12 @@
     } else if (f.id === "post-form") {
       if (S.uploading) { U.toast("照片還在上傳，請稍等一下再儲存。"); return; }
       var lines = function (v) { return String(v || "").split(/[\r\n]+/).map(function (x) { return x.trim(); }).filter(function (x) { return /^https:\/\//.test(x); }); };
-      var pst = { id: f.dataset.id, type: $("p-type").value, base: $("p-base").value, title: $("p-title").value.trim(), date: $("p-date").value,
+      var pst = { id: f.dataset.id, type: $("p-type").value, base: $("p-base").value, title: $("p-title").value.trim(), date: $("p-date").value, endDate: $("p-type").value === "成果花絮" ? $("p-end").value : "",
         body: $("p-body").value.trim(), photos: S.pp.concat(lines($("p-urls").value)), youtube: lines($("p-yt").value), link: $("p-link").value.trim(), pinned: $("p-pin").checked,
         team: $("p-team").value.trim(), time: $("p-time").value.trim(), location: $("p-loc").value.trim() };
       if (!pst.title) { U.toast("請填寫標題。"); return; }
+      if (pst.endDate && (!pst.date || pst.endDate < pst.date)) { U.toast("活動期間的迄日不能早於起日。"); return; }
+      if (pst.endDate === pst.date) pst.endDate = "";
       act(function () { return call("savePost", { post: pst }); }, "已儲存，公告欄馬上會更新。");
     }
   });
@@ -238,7 +241,7 @@
   });
   document.addEventListener("change", function (e) {
     if (e.target.id === "p-file" && e.target.files.length) uploadPics(e.target.files, e.target);
-    else if (e.target.id === "p-type") $("p-teambox").hidden = e.target.value !== "團隊活動";
+    else if (e.target.id === "p-type") { $("p-teambox").hidden = e.target.value !== "團隊活動"; $("p-endbox").hidden = e.target.value !== "成果花絮"; }
     else if (e.target.id === "p-from") {
       var fa = actById(e.target.value);
       if (fa) { $("p-title").value = fa.title + "｜活動花絮"; $("p-date").value = fa.date || ""; }
