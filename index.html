@@ -109,7 +109,7 @@ dialog.wide{width:min(920px,100%)}
 <div class="wrap">
   <header class="top">
     <div class="brand">HSINCHU SOCIAL INNOVATION HUB × YOUTH STARTUP HUB</div>
-    <nav class="nav"><a href="https://hsh1120201-dev.github.io/activity/" data-actlink>活動報名</a></nav>
+    <nav class="nav"><a href="#h-gal" id="photo-link">活動照片</a><a href="https://hsh1120201-dev.github.io/activity/" data-actlink>活動報名</a></nav>
   </header>
 
   <main>
@@ -186,6 +186,7 @@ dialog.wide{width:min(920px,100%)}
   var SITE = window.ACTIVITY_URL || "https://hsh1120201-dev.github.io/activity/", HERE = new URL("./", location.href).href;
   if (/^https:\/\//.test(window.SUGGEST_URL || "")) { $("suggest-link").href = window.SUGGEST_URL; $("sec-suggest").hidden = false; }
   document.querySelectorAll("[data-actlink]").forEach(function (a) { a.href = SITE; });
+  if (/^https:\/\//.test(window.PHOTOS_URL || "")) { $("photo-link").href = window.PHOTOS_URL; $("photo-link").target = "_blank"; $("photo-link").rel = "noopener"; } // 有設定雲端相簿就連過去，沒有就跳到成果花絮
   var NOTE_TYPES = ["團隊活動", "公告", "參訪", "課程"];
 
   function today() { var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
